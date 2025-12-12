@@ -1,0 +1,163 @@
+/* TwentyTwenty CSS for Video Comparison */
+
+.twentytwenty-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.twentytwenty-container {
+    box-sizing: content-box;
+    position: relative;
+    overflow: hidden;
+    cursor: ew-resize;
+    user-select: none;
+}
+
+.twentytwenty-container video {
+    max-width: 100%;
+    position: absolute;
+    top: 0;
+    display: block;
+}
+
+.twentytwenty-before,
+.twentytwenty-after {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.twentytwenty-before {
+    z-index: 20;
+}
+
+.twentytwenty-after {
+    z-index: 10;
+}
+
+/* Handle/Slider */
+.twentytwenty-handle {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    margin-left: -2px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 40;
+    cursor: ew-resize;
+}
+
+.twentytwenty-handle:before,
+.twentytwenty-handle:after {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 4px;
+    height: 9999px;
+    background: rgba(255, 255, 255, 0.3);
+    left: 0;
+}
+
+.twentytwenty-handle:before {
+    top: -9999px;
+}
+
+.twentytwenty-handle:after {
+    bottom: -9999px;
+}
+
+/* Arrows */
+.twentytwenty-left-arrow,
+.twentytwenty-right-arrow {
+    width: 0;
+    height: 0;
+    border: 6px inset transparent;
+    position: absolute;
+    top: 50%;
+    margin-top: -6px;
+}
+
+.twentytwenty-left-arrow {
+    border-right: 6px solid white;
+    left: 50%;
+    margin-left: -17px;
+}
+
+.twentytwenty-right-arrow {
+    border-left: 6px solid white;
+    right: 50%;
+    margin-right: -17px;
+}
+
+/* Handle circle */
+.twentytwenty-handle:before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 50%;
+    width: 64px;
+    height: 64px;
+    margin-top: -32px;
+    margin-left: -30px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Labels */
+.twentytwenty-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 25;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.twentytwenty-before-label,
+.twentytwenty-after-label {
+    position: absolute;
+    top: 20px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.twentytwenty-before-label {
+    left: 20px;
+}
+
+.twentytwenty-after-label {
+    right: 20px;
+}
+
+.twentytwenty-container:hover .twentytwenty-before-label,
+.twentytwenty-container:hover .twentytwenty-after-label {
+    opacity: 1;
+}
+
+.twentytwenty-before-label:before {
+    content: attr(data-content);
+}
+
+.twentytwenty-after-label:before {
+    content: attr(data-content);
+}

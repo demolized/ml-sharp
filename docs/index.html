@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHARP</title>
+
+    <!-- link -->
+    <Faviconapp rel="icon" type="image/x-icon" href="thumbnails/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="thumbnails/apple-touch-icon.png">
+
+    <!-- jQuery and TwentyTwenty -->
+    <script src="jquery-3.6.0.min.js"></script>
+    <script src="jquery.event.move.js"></script>
+    <script src="jquery.twentytwenty.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="bootstrap.bundle.min.js"></script>
+
+
+    <script src="gallery.js"></script>
+
+    <script>
+        // Show/hide navbar based on title visibility
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbar = document.querySelector('.navbar.fixed-top');
+            const titleElement = document.querySelector('.container.my-5.text-center h1');
+
+            function checkNavbarVisibility() {
+                if (titleElement) {
+                    const titleRect = titleElement.getBoundingClientRect();
+                    // Show navbar when title is scrolled above viewport
+                    if (titleRect.bottom < 0) {
+                        navbar.classList.add('show');
+                    } else {
+                        navbar.classList.remove('show');
+                    }
+                }
+            }
+
+            window.addEventListener('scroll', checkNavbarVisibility);
+            checkNavbarVisibility(); // Check on load
+        });
+    </script>
+
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="twentytwenty.css">
+
+
+    <style>
+        /* Add padding to body to account for fixed navbar */
+        body {
+            padding-top: 70px;
+        }
+
+        /* Navbar active state */
+        .navbar-nav .nav-link.active {
+            color: #0d6efd !important;
+            font-weight: 600;
+        }
+
+        /* Navbar slide-in animation */
+        .navbar.fixed-top {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+
+        .navbar.fixed-top.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Container max-width override */
+        .container {
+            max-width: 1140px;
+        }
+
+        /* Dataset Navigation - using nav-tabs style */
+        .dataset-nav {
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 30px;
+            overflow: visible;
+        }
+
+        .dataset-nav .nav {
+            flex-wrap: wrap;
+            overflow: visible;
+        }
+
+        .dataset-nav .nav-link {
+            white-space: nowrap;
+        }
+
+        /* Dataset Content Area */
+        .dataset-content-area {
+            display: none;
+        }
+
+        .dataset-content-area.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dataset-content {
+            padding: 0;
+        }
+
+        /* Thumbnail grid */
+        .thumbnail-container {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+        }
+
+        .thumbnail-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            padding: 10px 0;
+        }
+
+        .thumbnail-item {
+            position: relative;
+            cursor: pointer;
+            border: 3px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s;
+            aspect-ratio: 16 / 9;
+            background: #f8f9fa;
+        }
+
+        .thumbnail-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .thumbnail-item:hover {
+            border-color: #adb5bd;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .thumbnail-item.active {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 2px #0d6efd;
+        }
+
+        /* Method Button Selector - keep minimal for spacing */
+        .picker-container {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+        }
+
+        .picker-container .btn-group {
+            display: grid;
+            width: 100%;
+            gap: 0;
+        }
+
+        /* Mobile: 2x3 grid */
+        @media (max-width: 767px) {
+            .picker-container .btn-group {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+            }
+        }
+
+        /* Desktop: 1x6 grid */
+        @media (min-width: 768px) {
+            .picker-container .btn-group {
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: 1fr;
+            }
+        }
+
+        .picker-container .btn {
+            border-radius: 0;
+            flex: none;
+        }
+
+        .picker-container .btn:first-child {
+            border-top-left-radius: 0.375rem;
+        }
+
+        .picker-container .btn:last-child {
+            border-bottom-right-radius: 0.375rem;
+        }
+
+        @media (max-width: 767px) {
+            .picker-container .btn:nth-child(3) {
+                border-top-right-radius: 0.375rem;
+            }
+            .picker-container .btn:nth-child(4) {
+                border-bottom-left-radius: 0.375rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .picker-container .btn:last-child {
+                border-top-right-radius: 0.375rem;
+                border-bottom-left-radius: 0;
+            }
+        }
+
+        /* Comparison area */
+        .comparison-area {
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        /* Video controls */
+        .video-controls {
+            margin-top: 20px;
+        }
+
+        #comparison-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .comparison-area video {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            margin: 0 auto;
+        }
+
+        /* Round corners for twentytwenty container */
+        .twentytwenty-container {
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        /* Teaser grid layout */
+        .teaser-grid {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            grid-template-rows: 1fr 1fr;
+            margin-top: 1rem;
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .teaser-label-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            min-width: 0;
+        }
+
+        .rotated-text {
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            font-weight: 600;
+            font-size: 1rem;
+            white-space: nowrap;
+        }
+
+        /* Smaller font for longer labels */
+        .teaser-label-cell:nth-child(2) .rotated-text {
+            font-size: 0.8rem;
+        }
+
+        .teaser-image-cell {
+            grid-column: 2;
+            grid-row: 1 / 3;
+            padding: 0;
+            min-width: 0;
+        }
+
+        .teaser-image-cell img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            min-width: 600px;
+            object-fit: cover;
+        }
+
+        /* Desktop: remove min-width constraint */
+        @media (min-width: 768px) {
+            .teaser-image-cell img {
+                min-width: 0;
+            }
+        }
+    </style>
+</head>
+<body data-bs-spy="scroll" data-bs-target="#navbarNav" data-bs-offset="70" tabindex="0">
+    <!-- Fixed Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <img src="thumbnails/favicon.ico" alt="Apple" width="20" height="20" class="d-inline-block align-middle me-2">
+                <span class="d-none d-md-inline">Sharp Monocular View Synthesis in Less Than a Second</span>
+                <span class="d-inline d-md-none">SHARP</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#abstract">Abstract</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#videos">Videos</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="container my-5 text-center">
+        <h1 class="h2 fw-bold mb-3">Sharp Monocular View Synthesis in Less Than a Second</h1>
+
+        <p class="mb-2">
+            Lars Mescheder, Wei Dong, Shiwei Li, Xuyang Bai, Marcel Santos, Peiyun Hu, Bruno Lecouat, Mingmin Zhen,
+        </p>
+        <p class="mb-3">
+            Amaël Delaunoy, Tian Fang, Yanghai Tsin, Stephan R. Richter, Vladlen Koltun
+        </p>
+        <p class="fw-semibold text-muted mb-4">Apple</p>
+
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="https://arxiv.org/abs/2512.10685" target="_blank" class="btn btn-outline-primary px-4 py-2">
+                Paper (arXiv)
+            </a>
+            <a href="https://github.com/apple/ml-sharp" target="_blank" class="btn btn-outline-primary px-4 py-2">
+                Code (GitHub)
+            </a>
+        </div>
+    </div>
+
+    <!-- Abstract Section -->
+    <div id="abstract" class="container my-5">
+        <h2 class="h3 fw-bold mb-4">Abstract</h2>
+        <p class="fs-6 lh-lg text-secondary mb-4">We present SHARP, an approach to photorealistic view synthesis from a single image. Given a single photograph, SHARP regresses the parameters of a 3D Gaussian representation of the depicted scene. This is done in less than a second on a standard GPU via a single feedforward pass through a neural network. The 3D Gaussian representation produced by SHARP can then be rendered in real time, yielding high-resolution photorealistic images for nearby views. The representation is metric, with absolute scale, supporting metric camera movements. Experimental results demonstrate that SHARP delivers robust zero-shot generalization across datasets. It sets a new state of the art on multiple datasets, reducing LPIPS by 25–34% and DISTS by 21–43% versus the best prior model, while lowering the synthesis time by three orders of magnitude.</p>
+
+        <div class="teaser-grid">
+            <div class="teaser-label-cell">
+                <div class="rotated-text">Input</div>
+            </div>
+            <div class="teaser-label-cell">
+                <div class="rotated-text">Views synthesized by SHARP</div>
+            </div>
+            <div class="teaser-image-cell">
+                <img src="teaser.jpg" alt="SHARP" class="img-fluid rounded">
+            </div>
+        </div>
+        <p class="text-center text-muted mt-3 mb-0"><small>SHARP synthesizes a photorealistic 3D representation from a single photograph in less
+than a second. The synthesized representation supports high-resolution rendering of nearby views,
+with sharp details and fine structures, at more than 100 frames per second on a standard GPU. We
+illustrate on photographs from <a href="https://unsplash.com" target="_blank" class="text-decoration-none">Unsplash</a>.</small></p>
+    </div>
+
+    <!-- Comparison Section -->
+    <div id="videos" class="container my-5">
+        <h2 class="h3 fw-bold mb-4">Video Comparisons</h2>
+
+        <!-- Dataset Navigation Bar -->
+        <div class="dataset-nav">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" onclick="switchDataset('Unsplash')" data-dataset="Unsplash">Unsplash</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" onclick="switchDataset('ETH3D')" data-dataset="ETH3D">ETH3D</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" onclick="switchDataset('Middlebury')" data-dataset="Middlebury">Middlebury</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" onclick="switchDataset('ScanNetPP')" data-dataset="ScanNetPP">ScanNet++</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" onclick="switchDataset('TanksAndTemples')" data-dataset="TanksAndTemples">TanksAndTemples</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" onclick="switchDataset('Booster')" data-dataset="Booster">Booster</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" onclick="switchDataset('WildRGBD')" data-dataset="WildRGBD">WildRGBD</button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Dataset Content Areas -->
+        <div class="dataset-content-area active" id="content-Unsplash">
+            <div class="dataset-content">
+                <div class="thumbnail-container">
+                    <div class="thumbnail-row" id="thumbnails-Unsplash">
+
+                        <div class="thumbnail-item active"
+                             data-dataset="Unsplash"
+                             data-row-id="Unsplash_-5wkyNA2BPc_0000-0001"
+                             data-video-name="-5wkyNA2BPc_0000-0001"
+                             onclick="selectVideo('Unsplash', '-5wkyNA2BPc_0000-0001', this)">
+                            <img src="thumbnails/Unsplash_-5wkyNA2BPc_0000-0001.jpg" alt="-5wkyNA2BPc_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Unsplash"
+                             data-row-id="Unsplash_-B_lu05yfgE_0000-0001"
+                             data-video-name="-B_lu05yfgE_0000-0001"
+                             onclick="selectVideo('Unsplash', '-B_lu05yfgE_0000-0001', this)">
+                            <img src="thumbnails/Unsplash_-B_lu05yfgE_0000-0001.jpg" alt="-B_lu05yfgE_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Unsplash"
+                             data-row-id="Unsplash_-6ebJNtXtWs_0000-0001"
+                             data-video-name="-6ebJNtXtWs_0000-0001"
+                             onclick="selectVideo('Unsplash', '-6ebJNtXtWs_0000-0001', this)">
+                            <img src="thumbnails/Unsplash_-6ebJNtXtWs_0000-0001.jpg" alt="-6ebJNtXtWs_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Unsplash"
+                             data-row-id="Unsplash_-591oIJnyEQ_0000-0001"
+                             data-video-name="-591oIJnyEQ_0000-0001"
+                             onclick="selectVideo('Unsplash', '-591oIJnyEQ_0000-0001', this)">
+                            <img src="thumbnails/Unsplash_-591oIJnyEQ_0000-0001.jpg" alt="-591oIJnyEQ_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Unsplash"
+                             data-row-id="Unsplash_-Ejwm8Z0cAU_0000-0001"
+                             data-video-name="-Ejwm8Z0cAU_0000-0001"
+                             onclick="selectVideo('Unsplash', '-Ejwm8Z0cAU_0000-0001', this)">
+                            <img src="thumbnails/Unsplash_-Ejwm8Z0cAU_0000-0001.jpg" alt="-Ejwm8Z0cAU_0000-0001">
+                        </div>
+
+                    </div>
+                </div>
+                <div class="picker-container">
+                    <div class="btn-group flex-wrap" role="group" aria-label="Method selection" id="methods-Unsplash">
+                        <button type="button" class="btn btn-outline-primary active" data-method="gen3c_aligned" onclick="selectMethod('Unsplash', 'gen3c_aligned', this)">Gen3C</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="view_crafter_aligned" onclick="selectMethod('Unsplash', 'view_crafter_aligned', this)">ViewCrafter</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="tmpi_aligned" onclick="selectMethod('Unsplash', 'tmpi_aligned', this)">TMPI</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="flash3d_aligned" onclick="selectMethod('Unsplash', 'flash3d_aligned', this)">Flash3D</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="lvsm_sweep" onclick="selectMethod('Unsplash', 'lvsm_sweep', this)">LVSM</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="stable_virtual_camera_sweep" onclick="selectMethod('Unsplash', 'stable_virtual_camera_sweep', this)">SVC</button>
+                    </div>
+                </div>
+                <div class="comparison-area" id="comparison-Unsplash">
+                    <div class="loading-message">Select a video to compare</div>
+                </div>
+            </div>
+        </div>
+        <div class="dataset-content-area " id="content-ETH3D">
+            <div class="dataset-content">
+                <div class="thumbnail-container">
+                    <div class="thumbnail-row" id="thumbnails-ETH3D">
+
+                        <div class="thumbnail-item active"
+                             data-dataset="ETH3D"
+                             data-row-id="ETH3D_courtyard_00000_0000-0001"
+                             data-video-name="courtyard_00000_0000-0001"
+                             onclick="selectVideo('ETH3D', 'courtyard_00000_0000-0001', this)">
+                            <img src="thumbnails/ETH3D_courtyard_00000_0000-0001.jpg" alt="courtyard_00000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="ETH3D"
+                             data-row-id="ETH3D_facade_00000_0000-0001"
+                             data-video-name="facade_00000_0000-0001"
+                             onclick="selectVideo('ETH3D', 'facade_00000_0000-0001', this)">
+                            <img src="thumbnails/ETH3D_facade_00000_0000-0001.jpg" alt="facade_00000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="ETH3D"
+                             data-row-id="ETH3D_pipes_00000_0000-0001"
+                             data-video-name="pipes_00000_0000-0001"
+                             onclick="selectVideo('ETH3D', 'pipes_00000_0000-0001', this)">
+                            <img src="thumbnails/ETH3D_pipes_00000_0000-0001.jpg" alt="pipes_00000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="ETH3D"
+                             data-row-id="ETH3D_relief_00000_0000-0003"
+                             data-video-name="relief_00000_0000-0003"
+                             onclick="selectVideo('ETH3D', 'relief_00000_0000-0003', this)">
+                            <img src="thumbnails/ETH3D_relief_00000_0000-0003.jpg" alt="relief_00000_0000-0003">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="ETH3D"
+                             data-row-id="ETH3D_terrains_00002_0000-0001"
+                             data-video-name="terrains_00002_0000-0001"
+                             onclick="selectVideo('ETH3D', 'terrains_00002_0000-0001', this)">
+                            <img src="thumbnails/ETH3D_terrains_00002_0000-0001.jpg" alt="terrains_00002_0000-0001">
+                        </div>
+
+                    </div>
+                </div>
+                <div class="picker-container">
+                    <div class="btn-group flex-wrap" role="group" aria-label="Method selection" id="methods-ETH3D">
+                        <button type="button" class="btn btn-outline-primary active" data-method="gen3c_aligned" onclick="selectMethod('ETH3D', 'gen3c_aligned', this)">Gen3C</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="view_crafter_aligned" onclick="selectMethod('ETH3D', 'view_crafter_aligned', this)">ViewCrafter</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="tmpi_aligned" onclick="selectMethod('ETH3D', 'tmpi_aligned', this)">TMPI</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="flash3d_aligned" onclick="selectMethod('ETH3D', 'flash3d_aligned', this)">Flash3D</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="lvsm_sweep" onclick="selectMethod('ETH3D', 'lvsm_sweep', this)">LVSM</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="stable_virtual_camera_sweep" onclick="selectMethod('ETH3D', 'stable_virtual_camera_sweep', this)">SVC</button>
+                    </div>
+                </div>
+                <div class="comparison-area" id="comparison-ETH3D">
+                    <div class="loading-message">Select a video to compare</div>
+                </div>
+            </div>
+        </div>
+        <div class="dataset-content-area " id="content-Middlebury">
+            <div class="dataset-content">
+                <div class="thumbnail-container">
+                    <div class="thumbnail-row" id="thumbnails-Middlebury">
+
+                        <div class="thumbnail-item active"
+                             data-dataset="Middlebury"
+                             data-row-id="Middlebury_49b2bcfdd9_000_0000-0001"
+                             data-video-name="49b2bcfdd9_000_0000-0001"
+                             onclick="selectVideo('Middlebury', '49b2bcfdd9_000_0000-0001', this)">
+                            <img src="thumbnails/Middlebury_49b2bcfdd9_000_0000-0001.jpg" alt="49b2bcfdd9_000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Middlebury"
+                             data-row-id="Middlebury_ea068642ad_000_0000-0001"
+                             data-video-name="ea068642ad_000_0000-0001"
+                             onclick="selectVideo('Middlebury', 'ea068642ad_000_0000-0001', this)">
+                            <img src="thumbnails/Middlebury_ea068642ad_000_0000-0001.jpg" alt="ea068642ad_000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Middlebury"
+                             data-row-id="Middlebury_4e99cbe338_000_0000-0001"
+                             data-video-name="4e99cbe338_000_0000-0001"
+                             onclick="selectVideo('Middlebury', '4e99cbe338_000_0000-0001', this)">
+                            <img src="thumbnails/Middlebury_4e99cbe338_000_0000-0001.jpg" alt="4e99cbe338_000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Middlebury"
+                             data-row-id="Middlebury_b1f97f9954_000_0000-0001"
+                             data-video-name="b1f97f9954_000_0000-0001"
+                             onclick="selectVideo('Middlebury', 'b1f97f9954_000_0000-0001', this)">
+                            <img src="thumbnails/Middlebury_b1f97f9954_000_0000-0001.jpg" alt="b1f97f9954_000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Middlebury"
+                             data-row-id="Middlebury_9093b3b791_000_0000-0001"
+                             data-video-name="9093b3b791_000_0000-0001"
+                             onclick="selectVideo('Middlebury', '9093b3b791_000_0000-0001', this)">
+                            <img src="thumbnails/Middlebury_9093b3b791_000_0000-0001.jpg" alt="9093b3b791_000_0000-0001">
+                        </div>
+
+                    </div>
+                </div>
+                <div class="picker-container">
+                    <div class="btn-group flex-wrap" role="group" aria-label="Method selection" id="methods-Middlebury">
+                        <button type="button" class="btn btn-outline-primary active" data-method="gen3c_aligned" onclick="selectMethod('Middlebury', 'gen3c_aligned', this)">Gen3C</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="view_crafter_aligned" onclick="selectMethod('Middlebury', 'view_crafter_aligned', this)">ViewCrafter</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="tmpi_aligned" onclick="selectMethod('Middlebury', 'tmpi_aligned', this)">TMPI</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="flash3d_aligned" onclick="selectMethod('Middlebury', 'flash3d_aligned', this)">Flash3D</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="lvsm_sweep" onclick="selectMethod('Middlebury', 'lvsm_sweep', this)">LVSM</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="stable_virtual_camera_sweep" onclick="selectMethod('Middlebury', 'stable_virtual_camera_sweep', this)">SVC</button>
+                    </div>
+                </div>
+                <div class="comparison-area" id="comparison-Middlebury">
+                    <div class="loading-message">Select a video to compare</div>
+                </div>
+            </div>
+        </div>
+        <div class="dataset-content-area " id="content-ScanNetPP">
+            <div class="dataset-content">
+                <div class="thumbnail-container">
+                    <div class="thumbnail-row" id="thumbnails-ScanNetPP">
+
+                        <div class="thumbnail-item active"
+                             data-dataset="ScanNetPP"
+                             data-row-id="ScanNetPP_d755b3d9d8_00004_0000-0006"
+                             data-video-name="d755b3d9d8_00004_0000-0006"
+                             onclick="selectVideo('ScanNetPP', 'd755b3d9d8_00004_0000-0006', this)">
+                            <img src="thumbnails/ScanNetPP_d755b3d9d8_00004_0000-0006.jpg" alt="d755b3d9d8_00004_0000-0006">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="ScanNetPP"
+                             data-row-id="ScanNetPP_fb5a96b1a2_00110_0000-0004"
+                             data-video-name="fb5a96b1a2_00110_0000-0004"
+                             onclick="selectVideo('ScanNetPP', 'fb5a96b1a2_00110_0000-0004', this)">
+                            <img src="thumbnails/ScanNetPP_fb5a96b1a2_00110_0000-0004.jpg" alt="fb5a96b1a2_00110_0000-0004">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="ScanNetPP"
+                             data-row-id="ScanNetPP_e7af285f7d_00075_0000-0009"
+                             data-video-name="e7af285f7d_00075_0000-0009"
+                             onclick="selectVideo('ScanNetPP', 'e7af285f7d_00075_0000-0009', this)">
+                            <img src="thumbnails/ScanNetPP_e7af285f7d_00075_0000-0009.jpg" alt="e7af285f7d_00075_0000-0009">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="ScanNetPP"
+                             data-row-id="ScanNetPP_f9f95681fd_00008_0000-0004"
+                             data-video-name="f9f95681fd_00008_0000-0004"
+                             onclick="selectVideo('ScanNetPP', 'f9f95681fd_00008_0000-0004', this)">
+                            <img src="thumbnails/ScanNetPP_f9f95681fd_00008_0000-0004.jpg" alt="f9f95681fd_00008_0000-0004">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="ScanNetPP"
+                             data-row-id="ScanNetPP_09c1414f1b_00000_0000-0001"
+                             data-video-name="09c1414f1b_00000_0000-0001"
+                             onclick="selectVideo('ScanNetPP', '09c1414f1b_00000_0000-0001', this)">
+                            <img src="thumbnails/ScanNetPP_09c1414f1b_00000_0000-0001.jpg" alt="09c1414f1b_00000_0000-0001">
+                        </div>
+
+                    </div>
+                </div>
+                <div class="picker-container">
+                    <div class="btn-group flex-wrap" role="group" aria-label="Method selection" id="methods-ScanNetPP">
+                        <button type="button" class="btn btn-outline-primary active" data-method="gen3c_aligned" onclick="selectMethod('ScanNetPP', 'gen3c_aligned', this)">Gen3C</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="view_crafter_aligned" onclick="selectMethod('ScanNetPP', 'view_crafter_aligned', this)">ViewCrafter</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="tmpi_aligned" onclick="selectMethod('ScanNetPP', 'tmpi_aligned', this)">TMPI</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="flash3d_aligned" onclick="selectMethod('ScanNetPP', 'flash3d_aligned', this)">Flash3D</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="lvsm_sweep" onclick="selectMethod('ScanNetPP', 'lvsm_sweep', this)">LVSM</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="stable_virtual_camera_sweep" onclick="selectMethod('ScanNetPP', 'stable_virtual_camera_sweep', this)">SVC</button>
+                    </div>
+                </div>
+                <div class="comparison-area" id="comparison-ScanNetPP">
+                    <div class="loading-message">Select a video to compare</div>
+                </div>
+            </div>
+        </div>
+        <div class="dataset-content-area " id="content-TanksAndTemples">
+            <div class="dataset-content">
+                <div class="thumbnail-container">
+                    <div class="thumbnail-row" id="thumbnails-TanksAndTemples">
+
+                        <div class="thumbnail-item active"
+                             data-dataset="TanksAndTemples"
+                             data-row-id="TanksAndTemples_Church_00022_0000-0002"
+                             data-video-name="Church_00022_0000-0002"
+                             onclick="selectVideo('TanksAndTemples', 'Church_00022_0000-0002', this)">
+                            <img src="thumbnails/TanksAndTemples_Church_00022_0000-0002.jpg" alt="Church_00022_0000-0002">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="TanksAndTemples"
+                             data-row-id="TanksAndTemples_Church_00040_0000-0001"
+                             data-video-name="Church_00040_0000-0001"
+                             onclick="selectVideo('TanksAndTemples', 'Church_00040_0000-0001', this)">
+                            <img src="thumbnails/TanksAndTemples_Church_00040_0000-0001.jpg" alt="Church_00040_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="TanksAndTemples"
+                             data-row-id="TanksAndTemples_Meetingroom_00004_0000-0002"
+                             data-video-name="Meetingroom_00004_0000-0002"
+                             onclick="selectVideo('TanksAndTemples', 'Meetingroom_00004_0000-0002', this)">
+                            <img src="thumbnails/TanksAndTemples_Meetingroom_00004_0000-0002.jpg" alt="Meetingroom_00004_0000-0002">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="TanksAndTemples"
+                             data-row-id="TanksAndTemples_Meetingroom_00023_0000-0001"
+                             data-video-name="Meetingroom_00023_0000-0001"
+                             onclick="selectVideo('TanksAndTemples', 'Meetingroom_00023_0000-0001', this)">
+                            <img src="thumbnails/TanksAndTemples_Meetingroom_00023_0000-0001.jpg" alt="Meetingroom_00023_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="TanksAndTemples"
+                             data-row-id="TanksAndTemples_Truck_00007_0000-0002"
+                             data-video-name="Truck_00007_0000-0002"
+                             onclick="selectVideo('TanksAndTemples', 'Truck_00007_0000-0002', this)">
+                            <img src="thumbnails/TanksAndTemples_Truck_00007_0000-0002.jpg" alt="Truck_00007_0000-0002">
+                        </div>
+
+                    </div>
+                </div>
+                <div class="picker-container">
+                    <div class="btn-group flex-wrap" role="group" aria-label="Method selection" id="methods-TanksAndTemples">
+                        <button type="button" class="btn btn-outline-primary active" data-method="gen3c_aligned" onclick="selectMethod('TanksAndTemples', 'gen3c_aligned', this)">Gen3C</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="view_crafter_aligned" onclick="selectMethod('TanksAndTemples', 'view_crafter_aligned', this)">ViewCrafter</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="tmpi_aligned" onclick="selectMethod('TanksAndTemples', 'tmpi_aligned', this)">TMPI</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="flash3d_aligned" onclick="selectMethod('TanksAndTemples', 'flash3d_aligned', this)">Flash3D</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="lvsm_sweep" onclick="selectMethod('TanksAndTemples', 'lvsm_sweep', this)">LVSM</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="stable_virtual_camera_sweep" onclick="selectMethod('TanksAndTemples', 'stable_virtual_camera_sweep', this)">SVC</button>
+                    </div>
+                </div>
+                <div class="comparison-area" id="comparison-TanksAndTemples">
+                    <div class="loading-message">Select a video to compare</div>
+                </div>
+            </div>
+        </div>
+        <div class="dataset-content-area " id="content-Booster">
+            <div class="dataset-content">
+                <div class="thumbnail-container">
+                    <div class="thumbnail-row" id="thumbnails-Booster">
+
+                        <div class="thumbnail-item active"
+                             data-dataset="Booster"
+                             data-row-id="Booster_train_balanced_Motorcycle_camera_00_im6_png_00000_0000-0001"
+                             data-video-name="train+balanced+Motorcycle+camera_00+im6.png_00000_0000-0001"
+                             onclick="selectVideo('Booster', 'train+balanced+Motorcycle+camera_00+im6.png_00000_0000-0001', this)">
+                            <img src="thumbnails/Booster_train_balanced_Motorcycle_camera_00_im6_png_00000_0000-0001.jpg" alt="train+balanced+Motorcycle+camera_00+im6.png_00000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Booster"
+                             data-row-id="Booster_train_balanced_Bathroom_camera_00_im0_png_00000_0000-0001"
+                             data-video-name="train+balanced+Bathroom+camera_00+im0.png_00000_0000-0001"
+                             onclick="selectVideo('Booster', 'train+balanced+Bathroom+camera_00+im0.png_00000_0000-0001', this)">
+                            <img src="thumbnails/Booster_train_balanced_Bathroom_camera_00_im0_png_00000_0000-0001.jpg" alt="train+balanced+Bathroom+camera_00+im0.png_00000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Booster"
+                             data-row-id="Booster_train_balanced_Toilet_camera_00_im4_png_00000_0000-0001"
+                             data-video-name="train+balanced+Toilet+camera_00+im4.png_00000_0000-0001"
+                             onclick="selectVideo('Booster', 'train+balanced+Toilet+camera_00+im4.png_00000_0000-0001', this)">
+                            <img src="thumbnails/Booster_train_balanced_Toilet_camera_00_im4_png_00000_0000-0001.jpg" alt="train+balanced+Toilet+camera_00+im4.png_00000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Booster"
+                             data-row-id="Booster_train_balanced_Moka1_camera_00_im1_png_00000_0000-0001"
+                             data-video-name="train+balanced+Moka1+camera_00+im1.png_00000_0000-0001"
+                             onclick="selectVideo('Booster', 'train+balanced+Moka1+camera_00+im1.png_00000_0000-0001', this)">
+                            <img src="thumbnails/Booster_train_balanced_Moka1_camera_00_im1_png_00000_0000-0001.jpg" alt="train+balanced+Moka1+camera_00+im1.png_00000_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="Booster"
+                             data-row-id="Booster_train_balanced_CoffeeMaker_camera_00_im0_png_00000_0000-0001"
+                             data-video-name="train+balanced+CoffeeMaker+camera_00+im0.png_00000_0000-0001"
+                             onclick="selectVideo('Booster', 'train+balanced+CoffeeMaker+camera_00+im0.png_00000_0000-0001', this)">
+                            <img src="thumbnails/Booster_train_balanced_CoffeeMaker_camera_00_im0_png_00000_0000-0001.jpg" alt="train+balanced+CoffeeMaker+camera_00+im0.png_00000_0000-0001">
+                        </div>
+
+                    </div>
+                </div>
+                <div class="picker-container">
+                    <div class="btn-group flex-wrap" role="group" aria-label="Method selection" id="methods-Booster">
+                        <button type="button" class="btn btn-outline-primary active" data-method="gen3c_aligned" onclick="selectMethod('Booster', 'gen3c_aligned', this)">Gen3C</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="view_crafter_aligned" onclick="selectMethod('Booster', 'view_crafter_aligned', this)">ViewCrafter</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="tmpi_aligned" onclick="selectMethod('Booster', 'tmpi_aligned', this)">TMPI</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="flash3d_aligned" onclick="selectMethod('Booster', 'flash3d_aligned', this)">Flash3D</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="lvsm_sweep" onclick="selectMethod('Booster', 'lvsm_sweep', this)">LVSM</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="stable_virtual_camera_sweep" onclick="selectMethod('Booster', 'stable_virtual_camera_sweep', this)">SVC</button>
+                    </div>
+                </div>
+                <div class="comparison-area" id="comparison-Booster">
+                    <div class="loading-message">Select a video to compare</div>
+                </div>
+            </div>
+        </div>
+        <div class="dataset-content-area " id="content-WildRGBD">
+            <div class="dataset-content">
+                <div class="thumbnail-container">
+                    <div class="thumbnail-row" id="thumbnails-WildRGBD">
+
+                        <div class="thumbnail-item active"
+                             data-dataset="WildRGBD"
+                             data-row-id="WildRGBD_TV_scene_000_00028_0000-0002"
+                             data-video-name="TV+scene_000_00028_0000-0002"
+                             onclick="selectVideo('WildRGBD', 'TV+scene_000_00028_0000-0002', this)">
+                            <img src="thumbnails/WildRGBD_TV_scene_000_00028_0000-0002.jpg" alt="TV+scene_000_00028_0000-0002">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="WildRGBD"
+                             data-row-id="WildRGBD_truck_scene_064_00031_0000-0007"
+                             data-video-name="truck+scene_064_00031_0000-0007"
+                             onclick="selectVideo('WildRGBD', 'truck+scene_064_00031_0000-0007', this)">
+                            <img src="thumbnails/WildRGBD_truck_scene_064_00031_0000-0007.jpg" alt="truck+scene_064_00031_0000-0007">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="WildRGBD"
+                             data-row-id="WildRGBD_remote_control_scene_127_00031_0000-0005"
+                             data-video-name="remote_control+scene_127_00031_0000-0005"
+                             onclick="selectVideo('WildRGBD', 'remote_control+scene_127_00031_0000-0005', this)">
+                            <img src="thumbnails/WildRGBD_remote_control_scene_127_00031_0000-0005.jpg" alt="remote_control+scene_127_00031_0000-0005">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="WildRGBD"
+                             data-row-id="WildRGBD_bottle_scene_198_00020_0000-0001"
+                             data-video-name="bottle+scene_198_00020_0000-0001"
+                             onclick="selectVideo('WildRGBD', 'bottle+scene_198_00020_0000-0001', this)">
+                            <img src="thumbnails/WildRGBD_bottle_scene_198_00020_0000-0001.jpg" alt="bottle+scene_198_00020_0000-0001">
+                        </div>
+
+                        <div class="thumbnail-item "
+                             data-dataset="WildRGBD"
+                             data-row-id="WildRGBD_banana_scene_003_00021_0000-0005"
+                             data-video-name="banana+scene_003_00021_0000-0005"
+                             onclick="selectVideo('WildRGBD', 'banana+scene_003_00021_0000-0005', this)">
+                            <img src="thumbnails/WildRGBD_banana_scene_003_00021_0000-0005.jpg" alt="banana+scene_003_00021_0000-0005">
+                        </div>
+
+                    </div>
+                </div>
+                <div class="picker-container">
+                    <div class="btn-group flex-wrap" role="group" aria-label="Method selection" id="methods-WildRGBD">
+                        <button type="button" class="btn btn-outline-primary active" data-method="gen3c_aligned" onclick="selectMethod('WildRGBD', 'gen3c_aligned', this)">Gen3C</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="view_crafter_aligned" onclick="selectMethod('WildRGBD', 'view_crafter_aligned', this)">ViewCrafter</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="tmpi_aligned" onclick="selectMethod('WildRGBD', 'tmpi_aligned', this)">TMPI</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="flash3d_aligned" onclick="selectMethod('WildRGBD', 'flash3d_aligned', this)">Flash3D</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="lvsm_sweep" onclick="selectMethod('WildRGBD', 'lvsm_sweep', this)">LVSM</button>
+                        <button type="button" class="btn btn-outline-primary" data-method="stable_virtual_camera_sweep" onclick="selectMethod('WildRGBD', 'stable_virtual_camera_sweep', this)">SVC</button>
+                    </div>
+                </div>
+                <div class="comparison-area" id="comparison-WildRGBD">
+                    <div class="loading-message">Select a video to compare</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Citation -->
+    <div id="citation" class="container my-5">
+        <h2 class="h3 fw-bold mb-4">Citation</h2>
+        <div class="card bg-light">
+            <div class="card-body p-4">
+                <pre class="mb-0"><code class="font-monospace">@inproceedings{Sharp2025:arxiv,
+  title      = {Sharp Monocular View Synthesis in Less Than a Second},
+  author     = {Lars Mescheder and Wei Dong and Shiwei Li and Xuyang Bai and Marcel Santos and Peiyun Hu and Bruno Lecouat and Mingmin Zhen and Ama\"{e}l Delaunoyand Tian Fang and Yanghai Tsin and Stephan R. Richter and Vladlen Koltun},
+  journal    = {arXiv preprint arXiv:2512.10685},
+  year       = {2025},
+  url        = {https://arxiv.org/abs/2512.10685},
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light border-top py-3 mt-5">
+        <div class="container text-center">
+            <p class="mb-0 small text-body-secondary">&copy; 2025 Apple. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
